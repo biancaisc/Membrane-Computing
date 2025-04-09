@@ -2,7 +2,9 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-seed = 2
+import networkx as nx
+
+seed = 10
 np.random.seed(seed)
 random.seed(seed)
 
@@ -161,13 +163,35 @@ def plot_tour(cities, tour):
     plt.ylabel('Y Coordinate')
     plt.show()
 
+def calculate_mst_length(distance_matrix, tour):
+    if tour[0] == tour[-1]:
+        nodes = tour[:-1]
+    else:
+        nodes = tour
+
+    G = nx.Graph()
+    G.add_nodes_from(nodes)
+    
+    for i in range(len(nodes)):
+        for j in range(i + 1, len(nodes)):
+            u = nodes[i]
+            v = nodes[j]
+            weight = distance_matrix[u][v]
+            G.add_edge(u, v, weight=weight)
+    
+    mst = nx.minimum_spanning_tree(G, weight='weight')
+    
+    mst_length = sum(data['weight'] for u, v, data in mst.edges(data=True))
+    
+    return mst_length
+
 if __name__ == "__main__":
 
-    city_count = 30
+    city_count = 50
     cities = generate_cities(city_count)
     distance_matrix = generate_distance_matrix(cities)
 
-    ant_count = 30
+    ant_count = 50
     iterations = 200
     alpha = 1.0
     beta = 3.0
@@ -179,4 +203,9 @@ if __name__ == "__main__":
     best_length = colony.get_tour_length(best_tour)
 
     print(f"Cel mai bun tur găsit: {best_tour} cu lungimea {best_length:.2f}")
+
+    mst_length = calculate_mst_length(distance_matrix, best_tour)
+    print(f"Lungimea MST-ului determinat de best tour: {mst_length:.2f}")
+    print(f"Raportul dintre lungimea turului și lungimea MST-ului: {best_length / mst_length:.2f}")
+    
     plot_tour(cities, best_tour)
